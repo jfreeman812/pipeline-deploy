@@ -1,0 +1,8 @@
+FROM amd64/alpine
+# RUN mkdir /pipeline
+# ADD ./build/pipeline/linux/amd64/pipeline /tmp/pipeline
+ADD ./pipeline /tmp/pipeline
+WORKDIR /tmp
+# RUN ./pipeline user -name root -password root -email test@test.com -displayName Admin
+# CMD ["./pipeline", "run"]
+ENTRYPOINT ["/tmp/pipeline"]

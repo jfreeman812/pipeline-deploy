@@ -1,0 +1,38 @@
+version: '3'
+services:
+    db:
+        image: postgres
+        restart: always
+        environment:
+            POSTGRES_USER: 'pipeline'
+            POSTGRES_PASSWORD: 'test1234'
+            POSTGRES_DB: 'pipeline'
+        ports:
+            - "127.0.0.1:5432:5432"
+              #expose:
+            #    - "5432"
+    nats:
+        # ports:
+        #     - "4222:4222"
+        #     - "8222:8222"
+              #     # - "6222:6222"
+        expose:
+            - "4222"
+            - "8222"
+        image: nats
+        command: "-p 4222 -m 8222 -DV"
+    pipeline:
+        build: ./pipeline
+        environment:
+            DB_HOST: 'db'
+            DB_USER: 'pipeline'
+            DB_PASS: 'test1234'
+            DB_NAME: 'pipeline'
+            NATS_URL: 'nats://nats:4222'
+        ports:
+            - "1337:1337"
+        command: "run -host 0.0.0.0 -port 1337"
+    baseline:
+        build: ./baseline
+        environment:
+            NATS_URL: 'nats:4222'

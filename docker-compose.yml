@@ -30,7 +30,7 @@ services:
             DB_NAME: 'pipeline'
             NATS_URL: 'nats://nats:4222'
         ports:
-            - "1337:1337"
+            - "127.0.0.1:1337:1337"
         command: "run -host 0.0.0.0 -port 1337"
     baseline:
         build: ./baseline

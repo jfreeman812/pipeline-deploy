@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # binDir="./build/pipeline"
-curDir=$(pwD)
+curDir=$(pwd)
 buildDir="./build"
 binDir="${buildDir}/bin"
 depDir="${buildDir}/deps"

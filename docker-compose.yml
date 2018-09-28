@@ -9,16 +9,11 @@ services:
             POSTGRES_DB: 'pipeline'
         ports:
             - "127.0.0.1:5432:5432"
-              #expose:
-            #    - "5432"
     nats:
-        # ports:
-        #     - "4222:4222"
-        #     - "8222:8222"
-              #     # - "6222:6222"
         expose:
             - "4222"
-            - "8222"
+        ports:
+            - "127.0.0.1:8222:8222"
         image: nats
         command: "-p 4222 -m 8222 -DV"
     pipeline:

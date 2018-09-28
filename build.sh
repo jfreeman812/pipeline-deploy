@@ -134,11 +134,16 @@ getRepoLatest() {
 gatherDeps() {
     header "Gathering deps..."
     getRepoLatest pipeline docker git@github.rackspace.com:char7232/pipeline.git
-    getRepoLatest baseline docker git@github.rackspace.com:SecurityEngineering/baseline.git
-    getRepoLatest harden master git@github.rackspace.com:char7232/harden.git
+    getRepoLatest baseline sslyze git@github.rackspace.com:SecurityEngineering/baseline.git
+    getRepoLatest harden master git@github.rackspace.com:SecurityEngineering/harden.git
+}
+
+cleanupDeploy() {
+    rm -rf ${deployDir}/*
 }
 
 buildDeploy() {
+    cleanupDeploy
     gatherDeps
     buildBinary linux amd64 "${depDir}/pipeline" pipeline
     buildBinary linux amd64 "${depDir}/harden/cmd/warden" warden
@@ -151,14 +156,21 @@ buildDeploy() {
 
     header "Building baseline..."
     cp -r "${depDir}/baseline" "${deployDir}/baseline"
+
+    # HACK
+    git -C "${deployDir}/baseline" cherry-pick ac425dbd46f5ef5b4cd3c6b667929577b1ba53fe
+    # END HACK
+
     cp ./Dockerfile-baseline "${deployDir}/baseline/Dockerfile"
     cp "${binDir}/linux/amd64/warden" "${deployDir}/baseline/bin/warden"
     docker build -t baseline "${deployDir}/baseline" || exit 1
 
     cp docker-compose.yml "${deployDir}"
 
-    header "Packaging deploy.tar.gz..."
-    tar -c --exclude ".git*" -zvf ./deploy.tar.gz "${deployDir}" 
+    # HACK
+    header "Packaging deploy-sslyze.tar.gz..."
+    tar -c --exclude ".git*" -zvf ./deploy-sslyze.tar.gz "${deployDir}" 
+    # END HACK
 }
 
 cleanupBuild() {

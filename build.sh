@@ -133,7 +133,7 @@ getRepoLatest() {
 
 gatherDeps() {
     header "Gathering deps..."
-    getRepoLatest pipeline docker git@github.rackspace.com:char7232/pipeline.git
+    getRepoLatest pipeline master git@github.rackspace.com:char7232/pipeline.git
     getRepoLatest baseline master git@github.rackspace.com:SecurityEngineering/baseline.git
     getRepoLatest harden master git@github.rackspace.com:SecurityEngineering/harden.git
 }

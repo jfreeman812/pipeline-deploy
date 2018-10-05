@@ -133,15 +133,20 @@ getRepoLatest() {
 
 gatherDeps() {
     header "Gathering deps..."
-    getRepoLatest pipeline docker git@github.rackspace.com:char7232/pipeline.git
-    getRepoLatest baseline docker git@github.rackspace.com:SecurityEngineering/baseline.git
-    getRepoLatest harden master git@github.rackspace.com:char7232/harden.git
+    getRepoLatest pipeline master git@github.rackspace.com:char7232/pipeline.git
+    getRepoLatest baseline master git@github.rackspace.com:SecurityEngineering/baseline.git
+    getRepoLatest harden master git@github.rackspace.com:SecurityEngineering/harden.git
+}
+
+cleanupDeploy() {
+    rm -rf ${deployDir}/*
 }
 
 buildDeploy() {
+    cleanupDeploy
     gatherDeps
     buildBinary linux amd64 "${depDir}/pipeline" pipeline
-    buildBinary linux amd64 "${depDir}/harden/cmd/warden" warden
+    buildBinary linux amd64 "${depDir}/harden/cmd/warden" warden-linux
 
     header "Building pipeline..."
     mkdir -p "${deployDir}/pipeline"
@@ -152,7 +157,7 @@ buildDeploy() {
     header "Building baseline..."
     cp -r "${depDir}/baseline" "${deployDir}/baseline"
     cp ./Dockerfile-baseline "${deployDir}/baseline/Dockerfile"
-    cp "${binDir}/linux/amd64/warden" "${deployDir}/baseline/bin/warden"
+    cp "${binDir}/linux/amd64/warden-linux" "${deployDir}/baseline/bin/warden-linux"
     docker build -t baseline "${deployDir}/baseline" || exit 1
 
     cp docker-compose.yml "${deployDir}"

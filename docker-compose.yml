@@ -31,3 +31,4 @@ services:
         build: ./baseline
         environment:
             NATS_URL: 'nats:4222'
+            PYTHONUNBUFFERED: '1'

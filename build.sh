@@ -102,7 +102,7 @@ buildBinary() {
     cd "${curDir}"
     cd "${targetDep}"
     # env GOOS=${targetOS} GOARCH=${targetArch} go build -a -v -o "${binDir}/${targetOS}/${targetArch}/${targetBinary}" "${targetDep}" || exit 1
-    env GOOS=${targetOS} GOARCH=${targetArch} go build -a -v -o "${curDir}/build/bin/${targetOS}/${targetArch}/${targetBinary}" . || exit 1
+    env GOOS=${targetOS} GOARCH=${targetArch} go build -v -o "${curDir}/build/bin/${targetOS}/${targetArch}/${targetBinary}" . || exit 1
     cd "${curDir}"
 
     # env GOOS=${1} GOARCH=${2} go build -a -v -o "${binDir}/${1}/${2}/pipeline" . || exit 1

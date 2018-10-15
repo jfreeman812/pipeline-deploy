@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# binDir="./build/pipeline"
 curDir=$(pwd)
 buildDir="./build"
 binDir="${buildDir}/bin"
@@ -17,19 +16,8 @@ parseArgs() {
 
     for arg in "$@"; do
         case $arg in
-            -u)
-                unitTests
-            ;;
-            -b)
-                buildBinaries
-            ;;
             -g)
                 gatherDeps
-            ;;
-            -a)
-                gatherDeps
-                unitTests
-                buildBinaries
             ;;
             -d)
                 buildDeploy
@@ -54,27 +42,12 @@ header() {
 printHelp() {
     echo "Usage: $(basename "$0") [-c|-t|-h] ([-u|-b|-a]... | [-p|-p PLUGIN] | [-d/-D|-d/-D PLUGIN])"
     echo "Options:"
-    echo "-u    Run all unittests (BROKEN)"
-    echo "-b    Build pipeline binaries (BROKEN)"
     echo "-g    Gather dependencies"
-    echo "-a    Gather deps, run unittests, build binaries (BROKEN)"
     echo "-d    Build everything needed to deploy to a VM"
     echo "-c    Clean up the build directory"
     echo "-h    Show this help message"
     exit
 }
-
-# TODO: FIX THIS
-#unitTests() {
-#    testPipeline
-#}
-
-# TODO: FIX THIS
-#testPipeline() {
-#    header "Testing pipeline..."
-#    go test -i "./"
-#    go test -v "./..." || exit 2
-#}
 
 # parameters:
 # - OS to build for
@@ -101,14 +74,8 @@ buildBinary() {
     # TODO: FIX THIS HACKINESS
     cd "${curDir}"
     cd "${targetDep}"
-    # env GOOS=${targetOS} GOARCH=${targetArch} go build -a -v -o "${binDir}/${targetOS}/${targetArch}/${targetBinary}" "${targetDep}" || exit 1
     env GOOS=${targetOS} GOARCH=${targetArch} go build -v -o "${curDir}/build/bin/${targetOS}/${targetArch}/${targetBinary}" . || exit 1
     cd "${curDir}"
-
-    # env GOOS=${1} GOARCH=${2} go build -a -v -o "${binDir}/${1}/${2}/pipeline" . || exit 1
-    # env GOOS=${targetOS} GOARCH=${targetArch} go build -a -v -o "${binDir}/${targetOS}/${targetArach}/pipeline" . || exit 1
-    # env GOOS=${targetOS} GOARCH=${targetArch} go build -a -v -o "${binDir}/${targetOS}/${targetArch}/${targetBinary}" "${targetDep}" || exit 1
-
 }
 
 # parameters:
@@ -133,7 +100,7 @@ getRepoLatest() {
 
 gatherDeps() {
     header "Gathering deps..."
-    getRepoLatest pipeline master git@github.rackspace.com:SecurityEngineering/pipeline.git
+    getRepoLatest orca master git@github.rackspace.com:SecurityEngineering/orca.git
     getRepoLatest baseline master git@github.rackspace.com:SecurityEngineering/baseline.git
     getRepoLatest harden master git@github.rackspace.com:SecurityEngineering/harden.git
 }
@@ -145,14 +112,14 @@ cleanupDeploy() {
 buildDeploy() {
     cleanupDeploy
     gatherDeps
-    buildBinary linux amd64 "${depDir}/pipeline" pipeline
+    buildBinary linux amd64 "${depDir}/orca" orca
     buildBinary linux amd64 "${depDir}/harden/cmd/warden" warden-linux
 
-    header "Building pipeline..."
-    mkdir -p "${deployDir}/pipeline"
-    cp "${binDir}/linux/amd64/pipeline" "${deployDir}/pipeline/pipeline"
-    cp ./Dockerfile-pipeline "${deployDir}/pipeline/Dockerfile"
-    docker build -t pipeline "${deployDir}/pipeline" || exit 1
+    header "Building orca..."
+    mkdir -p "${deployDir}/orca"
+    cp "${binDir}/linux/amd64/orca" "${deployDir}/orca/orca"
+    cp ./Dockerfile-orca "${deployDir}/orca/Dockerfile"
+    docker build -t orca "${deployDir}/orca" || exit 1
 
     header "Building baseline..."
     cp -r "${depDir}/baseline" "${deployDir}/baseline"

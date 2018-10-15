@@ -4,9 +4,9 @@ services:
         image: postgres
         restart: always
         environment:
-            POSTGRES_USER: 'pipeline'
+            POSTGRES_USER: 'orca'
             POSTGRES_PASSWORD: 'test1234'
-            POSTGRES_DB: 'pipeline'
+            POSTGRES_DB: 'orca'
         ports:
             - "127.0.0.1:5432:5432"
     nats:
@@ -16,13 +16,13 @@ services:
             - "127.0.0.1:8222:8222"
         image: nats
         command: "-p 4222 -m 8222 -DV"
-    pipeline:
-        build: ./pipeline
+    orca:
+        build: ./orca
         environment:
             DB_HOST: 'db'
-            DB_USER: 'pipeline'
+            DB_USER: 'orca'
             DB_PASS: 'test1234'
-            DB_NAME: 'pipeline'
+            DB_NAME: 'orca'
             NATS_URL: 'nats://nats:4222'
         ports:
             - "127.0.0.1:1337:1337"

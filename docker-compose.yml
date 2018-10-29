@@ -14,6 +14,7 @@ services:
             - "4222"
         ports:
             - "127.0.0.1:8222:8222"
+            - "127.0.0.1:4222:4222"
         image: nats
         command: "-p 4222 -m 8222 -DV"
     orca:
@@ -29,6 +30,11 @@ services:
         command: "run -host 0.0.0.0 -port 1337"
     baseline:
         build: ./baseline
+        environment:
+            NATS_URL: 'nats:4222'
+            PYTHONUNBUFFERED: '1'
+    syntribos:
+        build: ./syntribos
         environment:
             NATS_URL: 'nats:4222'
             PYTHONUNBUFFERED: '1'

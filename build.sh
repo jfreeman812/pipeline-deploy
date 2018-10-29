@@ -4,32 +4,39 @@ curDir=$(pwd)
 buildDir="./build"
 binDir="${buildDir}/bin"
 depDir="${buildDir}/deps"
+includeDir="./include"
 deployDir="${buildDir}/deploy"
 buildArch=("386" "amd64")
 buildOS=("darwin" "linux")
 
+OPTIND=1
 parseArgs() {
     lastArg=${#@}
     if [[ $lastArg == 1 ]]; then
         lastArg=""
     fi
 
-    for arg in "$@"; do
-        case $arg in
-            -g)
-                gatherDeps
-            ;;
-            -d)
-                buildDeploy
-            ;;
-            -c)
+    #for arg in "$@"; do
+    while getopts "gdchl:" arg; do
+        case ${arg} in
+            c)
                 cleanupBuild
             ;;
-            -h)
+            d)
+                buildDeploy
+            ;;
+            g)
+                gatherDeps
+            ;;
+            h)
                 printHelp
+            ;;
+            l)
+                local+=("$OPTARG")
             ;;
         esac
     done
+    shift $((OPTIND -1))
 }
 
 header() {
@@ -40,12 +47,13 @@ header() {
 }
 
 printHelp() {
-    echo "Usage: $(basename "$0") [-c|-t|-h] ([-u|-b|-a]... | [-p|-p PLUGIN] | [-d/-D|-d/-D PLUGIN])"
+    echo "Usage: $(basename "$0") [-c|-g|h] (-l [PATH]) [-d]"
     echo "Options:"
-    echo "-g    Gather dependencies"
-    echo "-d    Build everything needed to deploy to a VM"
-    echo "-c    Clean up the build directory"
-    echo "-h    Show this help message"
+    echo "-c         Clean up the build directory"
+    echo "-d         Build everything needed to deploy to a VM"
+    echo "-g         Gather dependencies"
+    echo "-h         Show this help message"
+    echo "-l PATH    Local paths to each pipeline component e.g. ../syntribos-rax"
     exit
 }
 
@@ -86,7 +94,7 @@ getRepoLatest() {
     depName=${1}
     depBranch=${2}
     depURL=${3}
-
+    
     dst="${depDir}/${depName}"
     if [[ ! -a "$dst" ]]; then
         git clone "${depURL}" "$dst"
@@ -96,13 +104,31 @@ getRepoLatest() {
         git -C "$dst" checkout "${depBranch}"
         git -C "$dst" pull
     fi
+    printf "\n\n"
 }
 
 gatherDeps() {
     header "Gathering deps..."
-    getRepoLatest orca master git@github.rackspace.com:SecurityEngineering/orca.git
-    getRepoLatest baseline master git@github.rackspace.com:SecurityEngineering/baseline.git
-    getRepoLatest harden master git@github.rackspace.com:SecurityEngineering/harden.git
+    for path in "${local[@]}"; do
+        path="${path%/}/"
+        bn=$(basename $path)
+        echo "Copying ${path} to $depDir/${bn%'-rax'}"
+        rsync -r --exclude-from="${path}/.gitignore" "$path" "$depDir/${bn%'-rax'}"
+        printf "\n\n"
+    done
+    if [ ! -d "${depDir}/orca" ]; then 
+        getRepoLatest orca master git@github.rackspace.com:SecurityEngineering/orca.git
+    fi
+    if [ ! -d "${depDir}/baseline" ]; then 
+        getRepoLatest baseline master git@github.rackspace.com:SecurityEngineering/baseline.git
+    fi
+    if [ ! -d "${depDir}/harden" ]; then 
+        getRepoLatest harden master git@github.rackspace.com:SecurityEngineering/harden.git
+    fi
+    if [ ! -d "${depDir}/syntribos" ]; then 
+        getRepoLatest syntribos master git@github.rackspace.com:SecurityEngineering/syntribos-rax.git
+    fi
+    
 }
 
 cleanupDeploy() {
@@ -118,14 +144,19 @@ buildDeploy() {
     header "Building orca..."
     mkdir -p "${deployDir}/orca"
     cp "${binDir}/linux/amd64/orca" "${deployDir}/orca/orca"
-    cp ./Dockerfile-orca "${deployDir}/orca/Dockerfile"
+    cp ${includeDir}/orca/* "${deployDir}/orca"
     docker build -t orca "${deployDir}/orca" || exit 1
 
     header "Building baseline..."
     cp -r "${depDir}/baseline" "${deployDir}/baseline"
-    cp ./Dockerfile-baseline "${deployDir}/baseline/Dockerfile"
+    cp ${includeDir}/baseline/* "${deployDir}/baseline"
     cp "${binDir}/linux/amd64/warden-linux" "${deployDir}/baseline/bin/warden-linux"
     docker build -t baseline "${deployDir}/baseline" || exit 1
+
+    header "Building syntribos..."
+    cp -r "${depDir}/syntribos" "${deployDir}/syntribos"
+    cp ${includeDir}/syntribos/* "${deployDir}/syntribos"
+    docker build -t syntribos "${deployDir}/syntribos" || exit 1
 
     cp docker-compose.yml "${deployDir}"
 
@@ -158,7 +189,7 @@ main() {
         exit 1
     fi
 
-    if [[ $# == 0 ]]; then
+    if [ "$#" = 0 ] || { [[ "$#" < 3 && "$1" = "-l" ]]; }; then
         echo "Missing command"
         printHelp
     fi

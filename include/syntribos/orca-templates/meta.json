@@ -1,0 +1,6 @@
+{
+    "auth": {
+        "type": "function",
+        "val": "syntribos.extensions.basic_http.client:basic_auth"
+    }
+}

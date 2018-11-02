@@ -128,6 +128,11 @@ gatherDeps() {
     if [ ! -d "${depDir}/syntribos" ]; then 
         getRepoLatest syntribos master git@github.rackspace.com:SecurityEngineering/syntribos-rax.git
     fi
+
+    if [ ! -d "${depDir}/rax-templates" ]; then 
+        getRepoLatest rax-templates master git@github.rackspace.com:SecurityEngineering/syntribos-templates.git
+    fi
+
     
 }
 
@@ -135,9 +140,23 @@ cleanupDeploy() {
     rm -rf ${deployDir}/*
 }
 
+buildManifest() {
+    header "Assembling manifest..."
+    manifest=""
+    for dep in ${depDir}/*; do
+        sha=`git -C "${dep}" rev-parse "HEAD"`
+        branch=`git -C "${dep}" rev-parse --abbrev-ref "HEAD"`
+        line="${dep}: Branch ${branch} @ ${sha}"
+        manifest="${manifest}\n${line}"
+    done
+    echo -e "${manifest}"
+    echo -e "${manifest}" > "${deployDir}/manifest.txt"
+}
+
 buildDeploy() {
     cleanupDeploy
     gatherDeps
+    buildManifest
     buildBinary linux amd64 "${depDir}/orca" orca
     buildBinary linux amd64 "${depDir}/harden/cmd/warden" warden-linux
 
@@ -155,7 +174,8 @@ buildDeploy() {
 
     header "Building syntribos..."
     cp -r "${depDir}/syntribos" "${deployDir}/syntribos"
-    cp ${includeDir}/syntribos/* "${deployDir}/syntribos"
+    cp -r ${includeDir}/syntribos/* "${deployDir}/syntribos"
+    cp -r "${depDir}/rax-templates" "${deployDir}/syntribos/rax-templates"
     docker build -t syntribos "${deployDir}/syntribos" || exit 1
 
     cp docker-compose.yml "${deployDir}"

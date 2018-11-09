@@ -7,13 +7,15 @@ base_url="http://${api_username}:${api_password}@localhost:1337/api/v1"
 #endpoint_id=$(curl -ss "${base_url}/apps/${app_id}/endpoints" -XPOST -d '{"name": "blog", "description": "blog", "url": "https://inventropy.us/blog/"}' | jq ".id")
 # app_id=$(curl -ss "${base_url}/apps" -XPOST -d '{"name": "badssl", "description": "badssl endpoints"}' | jq ".id")
 # endpoint_id=$(curl -ss "${base_url}/apps/${app_id}/endpoints" -XPOST -d '{"name": "expired", "description": "expired badssl", "url": "https://expired.badssl.com"}' | jq ".id")
-# app_id=1
-# endpoint_id=1
 # tc_id=$(curl -ss "${base_url}/apps/${app_id}/tool_configs" -XPOST -d '{"tool_name": "syntribos", "config_name": "prod", "config_path": "syntribos.conf"}' | jq ".id")
 
 app_id=$(curl -ss "${base_url}/apps" -XPOST -d '{"name": "orca2", "description": "orca"}' | jq ".id")
 endpoint_id=$(curl -ss "${base_url}/apps/${app_id}/endpoints" -XPOST -d '{"name": "local", "description": "this points to orca itself", "url": "http://orca:1337"}' | jq ".id")
 tc_id=$(curl -ss "${base_url}/apps/${app_id}/tool_configs" -XPOST -d '{"tool_name": "syntribos", "config_name": "local", "config_path": "orca.conf"}' | jq ".id")
+
+# app_id=1
+# endpoint_id=1
+# tc_id=1
 
 # scan_id=$(curl -ss "${base_url}/scans" -XPOST -d "{\"application_id\": ${app_id}, \"endpoint_id\": ${endpoint_id}, \"tool_name\": \"baseline\"}" | jq ".id")
 scan_id=$(curl -ss "${base_url}/scans" -XPOST -d "{\"application_id\": ${app_id}, \"endpoint_id\": ${endpoint_id}, \"tool_config_id\": ${tc_id}, \"tool_name\": \"syntribos\"}" | jq ".id")
@@ -32,8 +34,11 @@ while true; do
         report_id=$(curl -ss "${scan_url}" | jq ".report_id")
         curl -ss "${base_url}/reports/${report_id}"
         break
-    elif [[ "${scan_status}" == "ERROR" ]]; then
+    elif [[ "${scan_status}" == "ERROR" || "${scan_status}" == "" ]]; then
         echo "ERROR SCANNING"
+        exit 1
+    elif [[ "${scan_status}" == "TIMEOUT" ]]; then
+        echo "SCAN TIMED OUT"
         exit 1
     fi
     sleep 5

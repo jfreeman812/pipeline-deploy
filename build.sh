@@ -116,19 +116,15 @@ gatherDeps() {
         rsync -r --exclude-from="${path}/.gitignore" "$path" "$depDir/${bn%'-rax'}"
         printf "\n\n"
     done
-    if [ ! -d "${depDir}/orca" ]; then 
-        getRepoLatest orca master git@github.rackspace.com:SecurityEngineering/orca.git
+    if [ ! -d "${depDir}/pipelib" ]; then
+        getRepoLatest pipelib master git@github.rackspace.com:SecurityEngineering/pipelib.git
     fi
     if [ ! -d "${depDir}/baseline" ]; then 
         getRepoLatest baseline master git@github.rackspace.com:SecurityEngineering/baseline.git
     fi
-    if [ ! -d "${depDir}/harden" ]; then 
-        getRepoLatest harden master git@github.rackspace.com:SecurityEngineering/harden.git
-    fi
     if [ ! -d "${depDir}/syntribos" ]; then 
         getRepoLatest syntribos master git@github.rackspace.com:SecurityEngineering/syntribos-rax.git
     fi
-
     if [ ! -d "${depDir}/rax-templates" ]; then 
         getRepoLatest rax-templates master git@github.rackspace.com:SecurityEngineering/syntribos-templates.git
     fi
@@ -138,6 +134,7 @@ gatherDeps() {
 
 cleanupDeploy() {
     rm -rf ${deployDir}/*
+    mkdir -p "${deployDir}"
 }
 
 buildManifest() {
@@ -157,8 +154,8 @@ buildDeploy() {
     cleanupDeploy
     gatherDeps
     buildManifest
-    buildBinary linux amd64 "${depDir}/orca" orca
-    buildBinary linux amd64 "${depDir}/harden/cmd/warden" warden-linux
+    buildBinary linux amd64 "${depDir}/pipelib/orca" orca
+    buildBinary linux amd64 "${depDir}/pipelib/harden/cmd/warden" warden-linux
 
     header "Building orca..."
     mkdir -p "${deployDir}/orca"
@@ -199,8 +196,8 @@ main() {
     fi
 
     goVersion=$(go version | awk {'print $3'})
-    if [[ $goVersion != "go1.11" ]]; then
-        echo "Go version 1.11 is required."
+    if [[ $goVersion != "go1.11"* ]]; then
+        echo "Go version >= 1.11 is required."
         exit 1
     fi
 

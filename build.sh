@@ -117,16 +117,16 @@ gatherDeps() {
         printf "\n\n"
     done
     if [ ! -d "${depDir}/pipelib" ]; then
-        getRepoLatest pipelib master git@github.rackspace.com:SecurityEngineering/pipelib.git
+        getRepoLatest pipelib master git@github.rackspace.com:QESecurity/pipelib.git
     fi
     if [ ! -d "${depDir}/baseline" ]; then 
-        getRepoLatest baseline master git@github.rackspace.com:SecurityEngineering/baseline.git
+        getRepoLatest baseline master git@github.rackspace.com:QESecurity/baseline.git
     fi
     if [ ! -d "${depDir}/syntribos" ]; then 
-        getRepoLatest syntribos master git@github.rackspace.com:SecurityEngineering/syntribos-rax.git
+        getRepoLatest syntribos master git@github.rackspace.com:QESecurity/syntribos-rax.git
     fi
     if [ ! -d "${depDir}/rax-templates" ]; then 
-        getRepoLatest rax-templates master git@github.rackspace.com:SecurityEngineering/syntribos-templates.git
+        getRepoLatest rax-templates master git@github.rackspace.com:QESecurity/syntribos-templates.git
     fi
 
     

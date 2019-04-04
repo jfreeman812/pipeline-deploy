@@ -196,7 +196,7 @@ main() {
     fi
 
     goVersion=$(go version | awk {'print $3'})
-    if [[ $goVersion != "go1.11"* ]]; then
+    if [[ $goVersion =~ go\d\.([0-9]|[0-1][0-1]) ]]; then
         echo "Go version >= 1.11 is required."
         exit 1
     fi
